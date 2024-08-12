@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"bb8490bc447e5d52","type":"text","text":"# Reporter\n\n메세지 전송 후 해당 메세지 정보를 DB Logger 큐에 전달한다.\n","x":-125,"y":-64,"width":305,"height":164},
+		{"id":"b15ec9152df36705","type":"text","text":"# DB Logger\n\n DB Logger 큐에 적재된 메세지 전송 성공 여부 및 기타 데이터를 이력 데이터베이스에 적재한다.\n\n### 개선 사항(Optional)\n\n1. 정산 DB 가 Replication 하는 것이 아닌 DB Logger 가 이력 DB 와 정산 DB 에 적재한다\n\t\n\t\\>\\> DB Logger 가 이력 DB 와 정산 DB 에 적재하는 것을 한 트랜잭션으로 묶어 처리하지 않고 DB Logger 가 이력 DB 에 데이터를 적재하고 다른 프로세스가 정산 DB 에 적재하는 방식으로 구현하자.","x":280,"y":-60,"width":380,"height":417},
+		{"id":"918afb607dcf25f4","type":"text","text":"# 이력 DB\n\n메세지 전송 정보(이력)를 적재한다.\n","x":820,"y":-80,"width":340,"height":200},
+		{"id":"4d4ffcadd7dc466e","type":"text","text":"# 정산 DB\n\n이력 DB를 Replication 하여 전송 이력에 대한 데이터를 바탕으로 정산 프로세스에서 사용한다.\n### 문제 사항 \n\n1. 정산 DB의 사용량이 많아지는 경우 주기적으로 메모리가 Full 로 사용하는 경우가 존재함.\n2. 주기적으로 프로세스를 재기동하여 **1** 의 문제를 해결하고 있음\n3. 운영 팀에서 DB 를 재기동하는 방식이 아닌 다른 방식으로 해결할 수 없는지에 대한 요구사항","x":760,"y":260,"width":440,"height":400}
+	],
+	"edges":[
+		{"id":"01c91a5d390bd696","fromNode":"bb8490bc447e5d52","fromSide":"right","toNode":"b15ec9152df36705","toSide":"left"},
+		{"id":"f677e6fbf75d3682","fromNode":"918afb607dcf25f4","fromSide":"bottom","toNode":"4d4ffcadd7dc466e","toSide":"top","label":"이력 DB를 정산 DB 에 Replication 한다."},
+		{"id":"18e5d0146ffd553f","fromNode":"b15ec9152df36705","fromSide":"right","toNode":"918afb607dcf25f4","toSide":"left"}
+	]
+}

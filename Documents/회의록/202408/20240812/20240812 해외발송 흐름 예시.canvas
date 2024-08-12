@@ -1,0 +1,16 @@
+{
+	"nodes":[
+		{"id":"3dac9a5911e76039","type":"text","text":"# DataManager\n\n- 나라 별 비즈니스 로직\n\t1. 중국 : Signature\n\t2. 동남아 : 안심번호\n\t3. 미국 : OTP etc … ","x":340,"y":-190,"width":360,"height":270},
+		{"id":"70987d5656d78996","type":"text","text":"Redis\n","x":400,"y":-300,"width":250,"height":60},
+		{"id":"58dd5ef81be60fd3","type":"text","text":"# API G/W\n\n- 추가 기능\n\t1. Global SMS Filiter\n\t2. Global LMS Filiter\n\n\n","x":-217,"y":-160,"width":377,"height":300},
+		{"id":"ab2b67563511048e","type":"text","text":"# Agent\n\n\n해외 메세지 (SMS / LMS) API G/W 에 전송 요청\n","x":-655,"y":-147,"width":275,"height":287},
+		{"id":"c6c009de6723423d","type":"text","text":"# Message Server","x":354,"y":301,"width":286,"height":419}
+	],
+	"edges":[
+		{"id":"c1af69f82d952951","fromNode":"ab2b67563511048e","fromSide":"right","toNode":"58dd5ef81be60fd3","toSide":"left"},
+		{"id":"8fbc926a276727d2","fromNode":"58dd5ef81be60fd3","fromSide":"right","toNode":"3dac9a5911e76039","toSide":"left"},
+		{"id":"1156887224764cf5","fromNode":"3dac9a5911e76039","fromSide":"left","toNode":"58dd5ef81be60fd3","toSide":"right"},
+		{"id":"5dbe8852644627eb","fromNode":"58dd5ef81be60fd3","fromSide":"bottom","toNode":"c6c009de6723423d","toSide":"left"},
+		{"id":"e53649e5538dda03","fromNode":"c6c009de6723423d","fromSide":"left","toNode":"58dd5ef81be60fd3","toSide":"bottom"}
+	]
+}

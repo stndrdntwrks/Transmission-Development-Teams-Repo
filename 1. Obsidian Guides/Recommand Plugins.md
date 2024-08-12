@@ -1,7 +1,7 @@
 
 # **Plugins**
 
-## **[Required] Syncronize to github**
+## **Syncronization Obisidian to Other**
 
 1. [Git](obsidian://show-plugin?id=obsidian-git) 
 	

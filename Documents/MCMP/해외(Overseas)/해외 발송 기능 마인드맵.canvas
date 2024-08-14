@@ -1,14 +1,16 @@
 {
 	"nodes":[
-		{"id":"184f890e5efaf166","type":"text","text":"## [API G/W]()\n\n### 주요 작업\n\n> 고객사가 DB에 적재한 데이터를 바탕으로 **차세대 에이전트의 메세지 전송 요청**에 대하여 해당 메세지 **전송 가능 여부를 판단**하여 메세지 서버에 메세지 전송 책임을 위임한다.\n> \n> 전송 가능 여부는 **1. 필수 값(Callback, Receiver, etc ..)에 대한 검증** 및 **2. 고객사별 해외 메세지 발송의 필수 값** 을 기준으로 판단하는데 **2 번의 경우** **DataManager 에게 주기적으로 데이터를 요청** 하여 가져오도록 한다.\n\n### 수행 작업\n\n1. **DataManager 에게 해외 발송에 필요한 정보를 주기적으로 요청** 하여 프로세스 내부에서 관리한다.\n2. 차세대 에이전트에게 메세지 전송 요청을 받는다.\n3. **메세지 전송 요청에 대하여 필수 값의 검증** 을 수행한다.\n   \n\t- **국가 번호(Nation Code)** 에 따른 필수 값 검증 #확인필요\n\t  1. 미국(America)\n\t  2. 중국(China)\n\t  3. ETC\n\n4. 메세지에 대한 검증을 마치고 전송 가능한 메세지라고 판단한 경우 **메세지 서버에게 요청** 하여 해당 메세지 전송에 대한 **책임을 위임**한다.\n","x":365,"y":-320,"width":675,"height":620},
+		{"id":"184f890e5efaf166","type":"text","text":"## [API G/W]()\n\n\n### 주요 작업\n\n> 고객사가 DB에 적재한 데이터를 바탕으로 **차세대 에이전트의 메세지 전송 요청**에 대하여 해당 메세지 **전송 가능 여부를 판단**하여 메세지 서버에 메세지 전송 책임을 위임한다.\n> \n> 전송 가능 여부는 **1. 필수 값(Callback, Receiver, etc ..)에 대한 검증** 및 **2. 고객사별 해외 메세지 발송의 필수 값** 을 기준으로 판단하는데 **2 번의 경우** **DataManager 에게 주기적으로 데이터를 요청** 하여 가져오도록 한다.\n\n### 수행 작업\n\n1. **DataManager 에게 해외 발송에 필요한 정보를 주기적으로 요청** 하여 프로세스 내부에서 관리한다.\n2. 차세대 에이전트에게 메세지 전송 요청을 받는다.\n3. **메세지 전송 요청에 대하여 필수 값의 검증** 을 수행한다.\n   \n\t- **국가 번호(Nation Code)** 에 따른 필수 값 검증 #확인필요\n\t  1. 미국(America)\n\t  2. 중국(China)\n\t  3. ETC\n\n4. 메세지에 대한 검증을 마치고 전송 가능한 메세지라고 판단한 경우 **메세지 서버에게 요청** 하여 해당 메세지 전송에 대한 **책임을 위임**한다.\n","x":365,"y":-320,"width":675,"height":620},
 		{"id":"2afff2499d37399f","type":"text","text":"## 차세대 에이전트\n### 주요 작업\n\n> 고객사가 DB 에 적재한 데이터를 바탕으로 **API G/W 에게 메세지 전송 요청**을 보낸다.\n\n### 수행 작업\n\n1. ","x":-420,"y":-270,"width":425,"height":520},
 		{"id":"f5e1d265459b9480","type":"text","text":"## Message Server\n\n\n","x":1480,"y":-200,"width":345,"height":380},
-		{"id":"fd349d465a7ec2d3","type":"text","text":"## 데이터 매니저\n\n### 주요 작업\n\n> 주기적 API G/W 가 요청하는 **고객 정보를 전달**한다.\n\n### 수행 작업\n\n1. API G/W 로부터 고객 정보를 전달한다.\n\n\t- **고객 정보의 종류** #확인필요\n\t\t1. 중국 : Signature\n","x":365,"y":-980,"width":675,"height":480}
+		{"id":"fd349d465a7ec2d3","type":"text","text":"## 데이터 매니저\n\n### 주요 작업\n\n> 주기적 API G/W 가 요청하는 **고객 정보를 전달**한다.\n\n### 수행 작업\n\n1. API G/W 로부터 고객 정보를 전달한다.\n\n\t- **고객 정보의 종류** #확인필요\n\t\t1. 중국 : Signature\n","x":365,"y":-980,"width":675,"height":480},
+		{"id":"f441932db884913d","type":"file","file":"Documents/MCMP/해외(Overseas)/API G:W/API G:W 연동 규격서.pdf","x":80,"y":520,"width":400,"height":520}
 	],
 	"edges":[
 		{"id":"f3717d00b7f5d395","fromNode":"184f890e5efaf166","fromSide":"top","toNode":"fd349d465a7ec2d3","toSide":"bottom"},
 		{"id":"d5bc50c4b88aae01","fromNode":"fd349d465a7ec2d3","fromSide":"bottom","toNode":"184f890e5efaf166","toSide":"top","label":"고객사 별 고유 데이터 요청 및 응답"},
 		{"id":"e25b3b5f56f767a9","fromNode":"2afff2499d37399f","fromSide":"right","toNode":"184f890e5efaf166","toSide":"left","label":"메세지 전송 요청"},
-		{"id":"b9474a0d9576d824","fromNode":"184f890e5efaf166","fromSide":"right","toNode":"f5e1d265459b9480","toSide":"left","label":"메세지 전송 책임 위임"}
+		{"id":"b9474a0d9576d824","fromNode":"184f890e5efaf166","fromSide":"right","toNode":"f5e1d265459b9480","toSide":"left","label":"메세지 전송 책임 위임"},
+		{"id":"930e776eb6897cc3","fromNode":"184f890e5efaf166","fromSide":"bottom","toNode":"f441932db884913d","toSide":"right","label":"API G/W 연동규격서 참조"}
 	]
 }

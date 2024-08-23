@@ -1,0 +1,6 @@
+{
+	"nodes":[
+		{"id":"cb238c22cabf5c51","type":"text","text":"# Client 초기화\n\n> application.yml 에 작성한 이통사 설정 정보를 통해 HttpClient 를 객체를 초기화한다.\n\n1. DirectConfig 는 application.yml 에 작성한 `sender.http.cpids` 값에 따라 `HttpClient` 객체를 초기화한다. 이후 생성한 `HttpClient` 객체를 요소로 갖는 리스트를 **빈(Bean)** 으로 등록한다. \n   \n- application.yml 일부 발췌\n\t```java\n\tsender:\n\t  name: D_M_SK01\n\t  group: Direct\n\t  telecom: skt        \n\t  is-dummy: on\n\t\n\t  http:\n\t    endpoint:\n\t      ip: 127.0.0.1\n\t      port: 10001\n\t\n\t    bpid: null\n\t    vas-id: \"21\"\n\t    vasp-id: \"1\"\n\t\n\t    cpids:\n\t      - cpid: \"1528801080\"\n\t        tps: 10\n\t      - cpid: \"1528801081\"\n\t        tps: 15\n\t```\n\n\n","x":-1180,"y":-560,"width":640,"height":680}
+	],
+	"edges":[]
+}

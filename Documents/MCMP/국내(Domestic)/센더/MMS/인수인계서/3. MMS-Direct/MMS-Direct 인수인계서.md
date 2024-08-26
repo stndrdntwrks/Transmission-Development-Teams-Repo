@@ -13,7 +13,7 @@
 
 1. [[부록. SKT 메세지 생성 방식]]
 2. [[부록. KTF 메세지 생성 방식]]
-3. [[부록. LGT 메세지 생성 방식]]
+3. [[부록. LGT 메세지 생성 방식]]
 
 
 ## CID 리스트
@@ -22,7 +22,7 @@
 
 # 들어가기에 앞서
 
-**직연동 MMS 센더**는 MCMP 플랫폼에서 MMS(Multimedia Messaging Service) 메세지를 이동통신사(SKT, KTF, LGT) 로 전송하기 위하여 사용하는 프로세스, *이동통신사 == 직연동 라고 생각하면 편함*,로 이동통신사로 메세지를 전송하기 때문에 스팸 메세지 관련 이슈에서 중계사에 비해 비교적 자유롭다는 장점을 가지고 있으나 복잡한 패킷 작성 방식과 적은 CID, *이동통신사 LGT 의 경우 2개의 MMS CID를  가지고 있음*, 로 사용하기 힘들다는 단점을 가지고 있다.
+**직연동 MMS 센더**는 MCMP 플랫폼에서 MMS(Multimedia Messaging Service) 메세지를 이동통신사(SKT, KTF, LGT) 로 전송하기 위하여 사용하는 프로세스, *이동통신사 == 직연동*,로 이동통신사로 메세지를 전송하기 때문에 스팸 메세지 관련 이슈에서 중계사에 비해 비교적 자유롭다는 장점을 가지고 있으나 복잡한 패킷 작성 방식과 적은 CID, *이동통신사 LGT 의 경우 2개의 MMS CID*, 로 사용하기 힘들다는 단점을 가지고 있다.
 
 > # **CID 란 ?**
 > 
@@ -36,9 +36,7 @@
 > 	 3. CID 와 매핑되어있는 SRC(Source) IP 및 PORT 변경
 
 
-복잡한 패킷 작성 방식과 관련하여 간략하게 설명하자면 **직연동 MMS 센더**는 해당 센더의 목적지인 **이동통신3사 (SKT, KTF, LGT)** 와 **HTTP 통신하며 SOAP 규격으로 메세지 전송 요청을 수행**한다. 이는 단문 메세지(SMS), 알림톡(KKO), RCS, 중계사(엘지유플러스, 엘지 헬로비전, 원샷, 한진정보통신 등) 와는 다른 방식이며 XML 기반의 옛통신 방식으로 복잡하고 생소하기에 전송(Submit / SubmitAck) 또는 리포트(Report / ReportAck) 패킷, *내부적으로 사용하는 용어인 전송(Submit), 전송응답(SubmitAck), 결과수신(Report), 결과수신응답(ReportAck) 라고 작성하였으나 이동통신사에서 부르는 이름은 다름*, 을 수정할 때 주의하여야 한다.
-
-
+복잡한 패킷 작성 방식과 관련하여 간략하게 설명하자면 **직연동 MMS 센더**는 해당 센더의 목적지인 **이동통신사(SKT, KTF, LGT)** 와 **HTTP 통신하며 SOAP 규격으로 메세지 전송 요청을 수행**한다. 이는 단문 메세지(SMS), 알림톡(KKO), RCS, 중계사(엘지유플러스, 엘지 헬로비전, 원샷, 한진정보통신 등) 와는 다른 방식이며 XML 기반의 옛통신 방식으로 복잡하고 생소하여 전송 요청 과정(Submit / SubmitAck) 또는 리포트 수신 과정(Report / ReportAck)에서 사용하는 패킷, *내부적으로 사용하는 용어인 전송(Submit), 전송응답(SubmitAck), 결과수신(Report), 결과수신응답(ReportAck) 라고 작성하였으나 이동통신사에서 부르는 방식이 다르다.*, 을 수정할 때 주의하여야 한다.
 
 
 # 주요 클래스 살펴보기
@@ -46,15 +44,27 @@
 직연동 MMS 센더 메세지 전송 흐름을 살펴볼 때 주요 클래스 위주로 살펴보면 큰 흐름을 잡기 쉽다. 자세히 살펴보아야 할 클래스는 아래와 같다.
 
 **주요 클래스**
-	1. Consumer
-	2. HttpClient
-	3. (SKT|KTF|LGT)ClientHandler
-	4. (SKT|KTF|LGT)SoapUtil
-	5. (SKT|KTF|LGT)Util
-	6. (SKT|KTF|LGT)MMSReportUtil
-	7. Storage 클래스 및 구현체
+1. 메세지 클래스 다이어그램
+2. Consumer
+3. HttpClient
+4. (SKT|KTF|LGT)ClientHandler
+5. (SKT|KTF|LGT)SoapUtil
+6. (SKT|KTF|LGT)Util
+7. (SKT|KTF|LGT)MMSReportUtil
+8. Storage 클래스 및 구현체
 
-## 1. MessageConsumer
+## 1. 메세지 클래스 다이어그램
+
+MMS 센더가 MCMP 내부 플랫폼 간 통신할 떄 사용하는 프로토콜은 `kr.co.seoultel.message.core.dto.MessageDelivery` 이나 MMS 센더의 목적지인 이통동신사/중계사와 통신할 때는 각 목적지의 연동 규격에 맞는 프로토콜을 사용하여야 하기 때문에 각 목적지(이동통신사 및 중계사) 별 메세지 클래스가 작성되어 있으며 이들을 공통으로 묶기 위한 `kr.co.seoultel.message.mt.mms.core.messages.Message` 클래스가 존재한다.
+
+- MMS 메세지 클래스 다이어그램
+	![이미지](MMS%20메세지%20클래스%20다이어그램.png)
+
+위의 이미지를 보면 알수있듯이 `kr.co.seoultel.message.mt.mms.core.messages.Message` 클래스가 가장 상위 클래스로서 존재하며 해당 클래스는 아직 어떠한 메서드나 필드도 존재하지 않는 빈 클래스이지만 추후 공통 사용해야하는 메서드가 존재하는 경우에 해당 클래스 내부에 정의하여 사용하도록 하자. 
+
+또한 부모클래스(`kr.co.seoultel.message.mt.mms.core.messages.Message`)를 두어 SoapUtil 및 MMSReportUtil 에서 형변환을 통한 
+
+## 2. MessageConsumer
 
 MessageConsumer 는 각 센더가 바라보는 RabbitMQ 의 Queue 에서 메세지를 가져온 후 MCMP 에서 사용하는 내부 프로토콜 클래스인 MessageDelivery 클래스로 형변환하고 기본적인 Validation 을 진행한다.
 
@@ -73,7 +83,7 @@ MessageConsumer 는 각 센더가 바라보는 RabbitMQ 의 Queue 에서 메세�
 Validation 작업을 모두 마친 후, MessageConsumer 는 CID 별 발송 가능 TPS 가중치로 두어 **Weighted-RoundRobin 방식으로 메세지 전송 책임을 위임할 HttpClient 를 선택**하여 해당 HttpClient 에게 **기본 값에 대하여 Validation 마친 메세지** 의 메세지 전송 책임을 위임한다.
 
 
-## 2. HttpClient 
+## 3. HttpClient 
 
 HttpClient 는 **이미지에 대한 만료 여부** 및 **전송 가능 여부 확인**, **이동통신사에 메세지 전송 요청** 및 **메세지 전송 요청 응답 처리**를 진행한다.
 
@@ -94,7 +104,7 @@ MessageConsumer 가 `List<HttpClient> httpClients` 를 주입받아 HttpClient �
 	![[HttpClient 생성 및 주입.png]]
 
 
-## 3. HttpClientHandler
+## 4. HttpClientHandler
 
 `kr.co.seoultel.message.mt.mms.direct.modules.client.http.HttpClientHandler` 클래스를 상속받는 `kr.co.seoultel.message.mt.mms.direct.skt.SktClientHandler`, `kr.co.seoultel.message.mt.mms.direct.ktf.KtfClientHandler`, `kr.co.seoultel.message.mt.mms.direct.lgt.LgtClientHandler` 는 HttpClient 가 메세지 전송 요청을 하기위하여 사용하는 필드 클래스로 각 클래스에 맞는 이동통신사의 규격에 맞게 메세지를 생성한 후, 메세지 전송 요청 및 전송 요청 응답 처리를 하는 역할을 수행한다. 
 
@@ -113,7 +123,7 @@ HttpClientHandler 에서 주요 흐름으로는 위의 4가지로 **1. 전송할
 위의 4가지 흐름을 거쳐서 메세지를 어떻게 전송하는지와 관련해서는 아래의 
 
 
-## 4. SoapUtil 및 SoapUtil 구현체
+## 5. SoapUtil 및 SoapUtil 구현체
 
 `kr.co.seoultel.message.mt.mms.direct.util.SoapUtil` 클래스는 SOAP 규격의 이동통신사 메세지를 생성하는데 사용하는 유틸리티 추상 클래스로 SOAP 규격의 MMS 메세지를 생성하는 `protected abstract String createSOAPMessage(InboundMessage inboundMessage) throws MCMPSoapRenderException;` 를 비롯하여 여러 추상 메서드가 명세되어있다.
 
@@ -129,7 +139,7 @@ HttpClientHandler 에서 주요 흐름으로는 위의 4가지로 **1. 전송할
 > MMS 센더가 직접 구현한 메세지 클래스는 CamelCase 로 작성되어 있다는 것에 주의해야한다.
 
 
-## 5. MMSReportUtil 및 MMSReportUtil 구현체
+## 6. MMSReportUtil 및 MMSReportUtil 구현체
 
 메세지 전송 후 MCMP 리포터에게 리포트를 전송하기 전 `kr.co.seoultel.message.core.dto.MessageDelivery` 객체의 필드 값을 변경주어야 하는데 수정해야 하는 필드 값은 아래와 같다.
 
@@ -184,14 +194,6 @@ HttpClientHandler 에서 주요 흐름으로는 위의 4가지로 **1. 전송할
 
 여러 메세지 클래스를 사용하더라도 동일한 메서드의 매개변수로 사용하기 위하여 공통 부모 클래스를 제네릭으로 선언한 후 형변환을 통해 처리하도록 하였다는 점에 주의하여 이후 수정 개발시에 주의하여 사용하도록 하자.
 
-# 메세지 클래스 다이어그램
-
-MMS 센더가 MCMP 내부 플랫폼 간 통신할 떄 사용하는 프로토콜은 `kr.co.seoultel.message.core.dto.MessageDelivery` 이나 MMS 센더의 목적지인 이통동신사/중계사와 통신할 때는 각 목적지의 연동 규격에 맞는 프로토콜을 사용하여야한다. 목적지와는 상관없이 여러 규격의 메세지들을 하나로 통합하기 위하여 `kr.co.seoultel.message.mt.mms.core.messages.Message`
-
-- MMS 메세지 클래스 다이어그램
-	![이미지](이미지/MMS%20메세지%20클래스%20다이어그램.png)
-
-위의 이미지를 보면 알수있듯이 `kr.co.seoultel.message.mt.mms.core.messages.Message` 클래스가 가장 상위 메세지 클래스로서 존재한다. 아직 어떠한 메서드나 필드도 존재하지 않는 빈 클래스이지만 추후 공통 사용해야하는 메서드가 존재하는 경우에 해당 클래스 내부에 정의하여 사용할 수 있다.
 
 
 # 직연동 MMS 센더 메세지 전송 흐름

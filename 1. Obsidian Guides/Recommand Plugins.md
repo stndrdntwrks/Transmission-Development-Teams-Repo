@@ -67,3 +67,4 @@
 	> 단축키로 여러 노트를 넘어다닐 수 있는 기능을 제공하는 커뮤니티 플러그인
 
 
+12. [Github Embeds](obsidian://show-plugin?id=github-embeds)

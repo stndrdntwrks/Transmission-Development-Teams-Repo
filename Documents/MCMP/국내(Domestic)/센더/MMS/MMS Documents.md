@@ -41,16 +41,16 @@
 
 이통사 및 중계사 MMS 센더의 바이너리를 버전 별로 효율적으로 관리하기 위한 관련 문서
 
-| **번호** | <center>**문서명**</center>                                                                                                                                                                                         | <center>**비고**</center> |
-| :----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------- |
-|   1    | [SKT MMS CID 리스트](obsidian://open?vault=Transmission-Development-Teams-Repo&file=Documents%2FMCMP%2F%EA%B5%AD%EB%82%B4(Domestic)%2F%EC%84%BC%EB%8D%94%2FMMS%2FCID%2FSKT%20CID%20%EB%A6%AC%EC%8A%A4%ED%8A%B8.pdf) |                         |
-|   2    | [KTF MMS CID 리스트](obsidian://open?vault=Transmission-Development-Teams-Repo&file=Documents%2FMCMP%2F%EA%B5%AD%EB%82%B4(Domestic)%2F%EC%84%BC%EB%8D%94%2FMMS%2FCID%2FKTF%20CID%20%EB%A6%AC%EC%8A%A4%ED%8A%B8.pdf) |                         |
-|   3    | [LGT MMS CID 리스트](obsidian://open?vault=Transmission-Development-Teams-Repo&file=Documents%2FMCMP%2F%EA%B5%AD%EB%82%B4(Domestic)%2F%EC%84%BC%EB%8D%94%2FMMS%2FCID%2FLGT%20CID%20%EB%A6%AC%EC%8A%A4%ED%8A%B8.pdf) |                         |
-|   4    | 엘지유플러스(UPLUS) 센더 CID 리스트                                                                                                                                                                                         |                         |
-|   5    | 엘지헬로비전(LGHV) 센더 CID 리스트                                                                                                                                                                                          |                         |
-|   6    | 원샷(SMTNT) 센더 CID 리스트                                                                                                                                                                                             |                         |
-|   7    | 한진정보통신(HIST) 센더 CID 리스트                                                                                                                                                                                          |                         |
-|   8    | 유니온엠씨(UNION) 센더 CID 리스트                                                                                                                                                                                          |                         |
+| **번호** | <center>**문서명**</center> | <center>**비고**</center> |
+| :----: | :----------------------- | :---------------------- |
+|   1    | [[자산. SKT CID 리스트.pdf]]  |                         |
+|   2    | [[자산. KTF CID 리스트.pdf]]  |                         |
+|   3    | [[자산. LGT CID 리스트.pdf]]  |                         |
+|   4    | 엘지유플러스(UPLUS) 센더 CID 리스트 |                         |
+|   5    | 엘지헬로비전(LGHV) 센더 CID 리스트  |                         |
+|   6    | 원샷(SMTNT) 센더 CID 리스트     |                         |
+|   7    | 한진정보통신(HIST) 센더 CID 리스트  |                         |
+|   8    | 유니온엠씨(UNION) 센더 CID 리스트  |                         |
 
 
 ## 이슈 사항

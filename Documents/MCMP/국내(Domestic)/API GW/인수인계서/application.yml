@@ -1,0 +1,633 @@
+eureka:
+  instance:
+    instance-id: ${server.ip}:${server.port} # API 게이트웨이 인스턴스의 고유 ID를 서버 IP와 포트로 설정
+    prefer-ip-address: false # 호스트 이름 대신 IP 주소를 사용하지 않음
+  client:
+    registry-fetch-interval-seconds: 30 # 서비스 목록을 30초마다 캐싱하는 값이며 Eureka Server에 등록된 Eureka Client 정보를 다시 가져와 캐싱하는 주기입니다.
+    disable-delta: true # 캐싱 시 변경된 부분만 업데이트
+    instanceInfoReplicationIntervalSeconds: 30 # API G/W의 상태를 Eureka Server에게 업데이트 하는 주기
+    register-with-eureka: true # Eureka 서버에 자신(API G/W)의 정보를 등록 할 것인가의 여부
+    fetch-registry: true # Eureka 서버에서 서비스 목록을 가져옴(API G/W는 무조건 True로 해야하며 False로 할 시 Http 요청을 백서버에게 전달 할 수 없습니다.)
+    service-url:
+      defaultZone: # Eureka Server의 URL (만약 Eureka Server가 클러스터링 된다고 하면 콤마(,)를 기준으로 URL을 등록하면 됩니다.) ex) URL_1,URL_2,URL_3
+
+gateway:
+  stdOriginCode: 123456789 # 스탠다드의 특수부가사업자코드
+  rcs:
+    standard:
+      agency-id: # 스탠다드의 RCS 표준 에이전시 ID 직접판매 고객 일 경우 자동으로 해당 설정값이 RCS 메세지 전송 요청 agencyId로 들어갑니다.
+      agency-key: # 스탠다드의 RCS 표준 에이전시 키 직접판매 고객 일 경우 자동으로 해당 설정값이 RCS 메세지 전송 요청 agencyKey로 들어갑니다.
+
+spring:
+  pid:
+    file: api-gateway.pid # API 게이트웨이의 PID 파일 명
+  application:
+    name: STD-API-GATEWAY # API 게이트웨이의 애플리케이션 이름으로 Eureka Client의 이름입니다.
+  codec:
+  # Http 요청과 응답 데이터를 메모리에 저장하는 양을 제한합니다.
+  # 데이터 크기가 이 한도를 초과하면 메모리 대신 디스크에 저장됩니다.
+  # 이를 통해 대용량 요청이나 응답 처리 시 발생할 수 있는 메모리 부족 문제를 예방할 수 있습니다.
+  # 기본값은 256KB입니다.
+    max-in-memory-size: 1MB
+  rabbitmq:
+    cluster:
+      use: true # RabbitMQ 클러스터 사용여부
+      nodes: # RabbitMQ 클러스터 노드 목록 클러스터 노드 3개가 있다고 가정하면 ex) "{ip}:{port}, {ip}:{port}, {ip}:{port}"
+    username: # RabbitMQ 사용자 명
+    password: # RabbitMQ 비밀번호
+    port: 5672 # RabbitMQ 포트
+    host: localhost # RabbitMQ 호스트
+    virtual-host: mcmp # RabbitMQ 가상 호스트
+  redis:
+    useCluster: true # Redis 클러스터 사용여부
+    host: localhost # Redis 호스트 (싱글노드 일 경우)
+    port: 6379 # Redis 포트 (싱글노드 일 경우)
+    password: # Redis 비밀번호
+    cluster:
+      nodes: # Redis 클러스터 노드 목록 ex) {ip}:{port}, {ip}:{port}, {ip}:{port}
+    storageKey: local_api_gateway # API G/W가 회원 인증 및 TPS Limit처리에 사용 할 데이터가 들어있는 Redis 필드 명
+    lettuce:
+      shutdown-timeout: 100 # Redis Lettuce 클라이언트 종료 대기 시간 (밀리초)
+      timeout: 30 # Redis Lettuce 클라이언트 연결 시간 제한 (초)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          expiration-time: 600000 # 토큰 만료 시간(ms)
+          jwk-set-uri: # JWT 디코더를 생성 할 때 필요한 공개키를 가져오는 곳 = (2024-07-16 기준 차세대 인증서버)
+
+  cloud:
+    gateway:
+      default-filters: # 모든 API에 기본 적용되는 필터
+        - name: GlobalFilter # 글로벌 필터
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE # 응답 헤더 중복 제거 필터
+      routes: 
+      # 1. id : API를 식별하는 ID 내용은 운영자 및 개발자 편의에 따라 바꿀 수 있지만 통상적으로 {서버 정보}/{서비스 종류}/{기능} 단위로 나타냅니다.
+      # 2. uri : lb:를 기본으로 하며 lb는 loadbalance이며 주로 lb://{EurekaClient app 명} 형식으로 등록하여 EurekaClient에게 Http 요청을 로드밸런싱 해줍니다.
+      # 3. predicates : API의 실제 엔드포인트를 정의하고 어떤 Http Method 인지 정의하는 필드
+      # 4. filteres : 정의된 Http 요청에 대해서 어떤 필터를 거칠지 등록하는 필드
+      ########## Message API Server #########
+        - id: message-api/message-send/sms # SMS 전송
+          uri: lb://STD-MESSAGE
+          predicates:
+            - Path=/v1/message/sms
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter
+            - BillCodeFilter
+            - VasFilter
+            - StdSmsRequestRateLimiterGatewayFilter
+        - id: message-api/message-send/mms # MMS/LMS 전송
+          uri: lb://STD-MESSAGE
+          predicates:
+            - Path=/v1/message/mms
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter
+            - BillCodeFilter
+            - VasFilter
+            - StdMmsRequestRateLimiterGatewayFilter
+        - id: message-api/message-send/kko # 알림톡/친구톡 전송
+          uri: lb://STD-MESSAGE
+          predicates:
+            - Path=/v2/message/kko/**
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/v2/(?<segment>.*), /$\{segment}
+            - JwtFilter
+            - BlockFilter
+            - BillCodeFilter
+            - VasFilter
+            - StdKkoRequestRateLimiterGatewayFilter
+        - id: message-api/message-send/rcs # RCS 전송
+          uri: lb://STD-MESSAGE
+          predicates:
+            - Path=/v1/rcs
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/v2/(?<segment>.*), /$\{segment}
+            - JwtFilter
+            - BlockFilter
+            - BillCodeFilter
+            - VasFilter
+            - StdRcsRequestRateLimiterGatewayFilter
+        ########## OAuth2 Server Route #########
+        - id: oauth2-server/get-publicKey # 공개키 요청
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/.well-known/key-set
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+        - id: oauth2-server/get-token # 토큰 발급
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/auth/token
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+        - id: oauth2-server/mo/login # 미정
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/auth/mo/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+
+        - id: oauth2-server/member/service # 회원 서비스 등록
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/member/service
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+          ########## Storage Server Route #########
+        - id: storage-server/file-upload # 이미지 업로드
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage/file
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter
+            - StdFileRequestRateLimiterGatewayFilter
+        - id: storage-server/file-download # 이미지 다운로드 (내부용)
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage/download
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+        - id: storage-server/file-check # 이미지 조회
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter
+            - StdFileRequestRateLimiterGatewayFilter
+        - id: storage-server/file-check # 이미지 조회 (내부용)
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage/mcmp-api
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            ## RCS
+        - id: storage-server/rcs-file-upload # RCS 이미지 업로드
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage/rcs/file
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter      
+            - StdFileRequestRateLimiterGatewayFilter    
+        - id: storage-server/rcs-file-check # RCS 이미지 조회
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage/rcs
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter      
+            - StdFileRequestRateLimiterGatewayFilter   
+        - id: storage-server/rcs-file-download # RCS 이미지 다운로드(내부용)
+          uri: lb://STD-STORAGE
+          predicates:
+            - Path=/v1/storage/rcs/download
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+          ########## Admin API #########
+        - id: OAuth2-server/admin-join # 관리자 가입
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+        - id: OAuth2-server/admin-login # 관리자 로그인
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin/token
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+        - id: OAuth2-server/admin-delete # 관리자 추방(탈퇴)
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin/{adminId}
+            - Method=DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: OAuth2-server/admin-detail # 관리자 정보 상세보기
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin/{adminId}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: OAuth2-server/admin-info-update # 관리자 정보 수정
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+          ########## ADMIN API (MASTER) #########
+        - id: OAuth2-server/admin-info-detail # 관리자 정보 리스트
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: OAuth2-server/admin-auth-add # 관리자 권한 추가 
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin/auth
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: OAuth2-server/admin-auth-permission # 관리자에게 관리 허용
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/admin/permission
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        ## Admin (고객 관리 API)
+        - id: oauth2-server/member-join # 고객 가입
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-detail # 고객 상세보기
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/{groupCode}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-update # 고객 정보 수정
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-delete # 고객 탈퇴
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/{groupCode}
+            - Method=DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-client-add # 고객 Client 추가
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/client
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-client-update # 고객 Client 정보 수정
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/client
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-client-info-detailByClientId # 고객 Client 상세 정보 PK(clientId)로 조회
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/client/{clientId}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-client-info-detailByGrpCdAndClientKey # 고객 Client 상세 정보 GroupCode와 ClientKey로 조회
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/client/{grpCd}/{clientKey}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-client-info-list # 특정 GroupCode의 Client 정보 리스트
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/clients/{grpCd}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-info-list # 고객 리스트
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-service-add # 서비스 추가
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/service
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-service-detail # 서비스 코드 상세보기
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/service/{groupCode}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-service-update # 서비스 코드 수정
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/service
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-service-update # 서비스 코드 삭제
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/service/{groupCode}
+            - Method=DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-service-list # 서비스 코드 리스트
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/services
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-bill-add # 정산코드 추가
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/bill
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-bill-delete # 정산코드 제거
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/bill/{groupCode}/{billCode}
+            - Method=DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-bill-detail # 정산코드 상세 보기
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/bill/{groupCode}/{billCode}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/member-bill-detail # 특정 고객의 정산코드 리스트 조회 
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/bill/{groupCode}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/route-add # 라우팅 룰 추가
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/route
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/route-delete # 라우팅 룰 삭제
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/route/{groupCode}/{senderGroup}/{messageChannel}
+            - Method=DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/route-delete # 라우팅 룰 수정
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/route
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/route-list # 라우팅 룰 리스트
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/routes
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/route-detail # 라우팅 룰 상세보기
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/route/{routeId}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/sender-add # 센더 추가
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/sender
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/sender-update # 센더 수정
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/sender
+            - Method=PUT
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/sender-delete # 센더 삭제
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/sender/{senderName}/{senderGroup}
+            - Method=DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/sender-update # 센더 리스트 (memory)
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/senders/memory
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: oauth2-server/sender-update # 센더 리스트 (db)
+          uri: lb://MCMP-SENDER-MANAGER
+          predicates:
+            - Path=/v1/senders/db
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: agent-manager-server/agent-info-add # 에이전트가 서버에게 자신의 정보등록
+          uri: lb://MCMP-AGENT-MANAGER
+          predicates:
+            - Path=/v1/agent/data
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+        - id: agent-manager-server/agent-info-add # 에이전트들의 정보 조회
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/agents/data
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: agent-manager-server/agent-info-add # 에이전트 정보 상세보기
+          uri: lb://MCMP-AGENT-MANAGER
+          predicates:
+            - Path=/v1/agent/{clientId}
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: agent-manager-server/client-info-customGet # 커스텀client 정보 조회 
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/member/client/key/{clientKey}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: agent-manager-server/client-info-customGet # 상세 커스텀client 정보 조회 
+          uri: lb://STD-OAUTH2
+          predicates:
+            - Path=/v1/agent/data/{clientKey}
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: agent-manager-server/log-message-search
+          uri: lb://DISCOVERY
+          predicates:
+            - Path=/track
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: agent-manager-server/log-message-search-by-dir
+          uri: lb://DISCOVERY
+          predicates:
+            - Path=/log/track/sub
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - AdminJwtFilter
+        - id: mcmp-agent-manager/polling-report 
+          uri: lb://MCMP-AGENT-MANAGER
+          predicates:
+            - Path=/v1/agent/rpt/sms
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter
+        - id: mcmp-agent-manager/polling-report
+          uri: lb://MCMP-AGENT-MANAGER
+          predicates:
+            - Path=/v1/agent/rpt/mms
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - JwtFilter

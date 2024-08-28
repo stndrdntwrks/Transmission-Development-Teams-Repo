@@ -1,0 +1,12 @@
+{
+	"nodes":[
+		{"id":"e5d68e4ebc0fed0f","x":-480,"y":-140,"width":265,"height":110,"type":"text","text":"# 에이전트\n\n"},
+		{"id":"75804865c809833b","x":-120,"y":-140,"width":285,"height":190,"type":"text","text":"# API G/W\n"},
+		{"id":"544d320610ae0b49","x":260,"y":-145,"width":300,"height":195,"type":"text","text":"# 메세지 서버"},
+		{"id":"549096c8cbd3fb23","x":660,"y":-145,"width":280,"height":195,"type":"text","text":"# PTP"},
+		{"id":"a4afcae14deab1ba","x":1060,"y":-145,"width":280,"height":195,"type":"text","text":""}
+	],
+	"edges":[
+		{"id":"94178bce90860884","fromNode":"e5d68e4ebc0fed0f","fromSide":"right","toNode":"75804865c809833b","toSide":"left"}
+	]
+}

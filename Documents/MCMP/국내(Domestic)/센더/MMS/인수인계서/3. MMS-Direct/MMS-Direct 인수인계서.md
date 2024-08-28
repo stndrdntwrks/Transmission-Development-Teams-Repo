@@ -54,6 +54,22 @@
 | **REPORT** / **REPORT-ACK** | **메세지 전송 결과 전달**은 **REPORT** 라고 말하며 **메세지 전송 결과 전달에 대한 응답**을 **REPORT-ACK** 라고 한다. 직연동 MMS 의 경우, 이동통신사로부터 웹 훅(Web Hook) 방식으로 리포트를 수신받는다.<br><br>※ 이동통신사 또는 중계사 -> MMS 센더 (**REPORT**)<br>※ MMS 센더 -> 이동통신사 또는 중계사 (**REPORT-ACK**)                                                                                                                         |
 | **영속성(Persistence)**        | **영속성**이란 *데이터를 생성한 프로그램이 종료되어도 사라지지 않는 데이터의 특성*을 말한다. MMS 센더가 인입된 메세지 건에 대하여 영속성을 보장해야하는 이유를 설명하자면  고객사가 전송하는 메세지는 일반적으로 이동통신사와 **1. SUBMIT**, **2. SUBMIT-ACK**, **3. REPORT**, **4. REPORT-ACK** 과정을 마친 후 **5. MCMP 리포터 프로세스에게 리포트를 전송**해주어 **6. 고객사 에이전트에 리포트를 전송**하는 것까지를 하나의 생명주기를 가진다. MMS 센더는 해당 생명주기 동안 메세지(MessageDelivery)가 소실되지 않도록 관리해주어야 한다. |
 
+---
+
+# 별첨 문서
+
+## 이동통신사(SKT, KTF, LGT) 별 메세지 생성 방식
+
+1. [[부록. SKT 메세지 생성 방식]]
+2. [[부록. KTF 메세지 생성 방식]]
+3. [[부록. LGT 메세지 생성 방식]]
+
+
+## CID 리스트
+
+1. [[자산. SKT CID 리스트.pdf]]
+2. [[자산. KTF CID 리스트.pdf]]
+3. [[자산. LGT CID 리스트.pdf]]
 
 ---
 
@@ -242,60 +258,4 @@ HttpClient 가 수행하는 *1. 이미지 전송 가능 여부 확인 및 이미
 여러 메세지 클래스를 사용하더라도 해당 메서드의 인자로 넣을 수 있도록 하기 위하여 부모 클래스를 제네릭(Generic)으로 선언해 형변환을 통해 로직을 수행하도록 작성되어 이후 수정 개발시에 주의하여 사용하도록 하자.
 
 
-# 직연동 MMS 센더 메세지 전송 흐름
 
-[[#HttpClientHandler]] 에서 살펴봤듯 기본적인 메세지 전송 흐름은 아래와 같다.
-
-- **공통 메세지 전송 흐름**
-	1. 이통사 별 SoapMessage 생성
-	2. Submit 시점, MessageDelivery 값 설정하기
-	3. 이통사에 메세지 전송 요청
-	4. 메세지 전송 요청에 응답에 따른 메세지 처리
-
-이동통신사마다 다른 부분은 SoapMessage 를 생성하는 부분으로 각 이동통신사는 MCMP 에서 SOAP 형식의 메세지의 부모 클래스인 `kr.co.seoultel.message.mt.mms.core.messages.direct.SoapMessage`를 상속받는  `kr.co.seoultel.message.mt.mms.core.messages.direct.skt.SktSoapMessage` 와 `kr.co.seoultel.message.mt.mms.core.messages.direct.ktf.KtfSoapMessage`, `kr.co.seoultel.message.mt.mms.core.messages.direct.lgt.LgtSoapMessage` 가 각 이동통신사 메세지의 부모 클래스이다. 
-
-각 이동통신사 별 요청 및 응답 방식을 제외한 나머지 부분은 모두 동일하여 큰 맥락에서 직연동 MMS 센더의 Ht 이동통신사별로 어떠한 방식으로 요청하는지와 관련한 자세한 내용은 [[#이동통신사(SKT, KTF, LGT) 별 요청 방식 살펴보기]] 에서 살펴보고 
-
-
-위의 4가지 순서에 맞춰서 하나씩 살펴보도록 하자. 우선 HttpClient 가 MessageConsumer 에게 메세지 전송 책임을 위임받아 전송 가능 여부를 확인한 이후 각 이통사에 맞는 HttpClientHandler 의 `doSubmit(InboundMessage inboundMessage)` 메서드를 호출하게된다.
-
-- 
-```java
-@Slf4j  
-public class SktClientHandler extends HttpClientHandler {
-
-	... 
-	
-	@Override  
-	protected void doSubmit(InboundMessage inboundMessage) throws MCMPSoapRenderException, NAckException {
-		String soapMessageToString = soapUtil.createSOAPMessage(inboundMessage);
-```
-
-각각의 요청 및 응답은 HTTP 프로토콜로 정의되어 있기 때문에 HTTP 요청을 위하여 `org.springframework.web.client.RestTemplate` 를 사용한다. 
-
-
-
-
-
-
-
-
-
-
-
-# 별첨 문서
-
-## 이동통신사(SKT, KTF, LGT) 별 메세지 생성 방식
-
-1. [[부록. SKT 메세지 생성 방식]]
-2. [[부록. KTF 메세지 생성 방식]]
-3. [[부록. LGT 메세지 생성 방식]]
-
-
-## CID 리스트
-
-1. [[자산. SKT CID 리스트.pdf]]
-2. [[자산. KTF CID 리스트.pdf]]
-3. [[자산. LGT CID 리스트.pdf]]
-
----

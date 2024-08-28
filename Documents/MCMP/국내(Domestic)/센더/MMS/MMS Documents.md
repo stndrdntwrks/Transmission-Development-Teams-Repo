@@ -13,9 +13,9 @@
 
 | **번호** | <center>**문서명**</center>                                                       | <center>**비고**</center>                |
 | :----: | :----------------------------------------------------------------------------- | :------------------------------------- |
-|   1    | [MMS-Core 인수인계서](./인수인계서/1.%20MMS-Core/MMS-Core%20인수인계서)                       | 차세대 MMS의 공통 라이브러리인 MMS-Core 의 인수인계서    |
-|   2    | [MMS-Modules 인수인계서](./인수인계서/2.%20MMS-Core-Modules/MMS-Core-Modules%20인수인계서)    | 차세대 MMS의 공통 라이브러리인 MMS-Modules 의 인수인계서 |
-|   3    | [MCMP 직연동 MMS(Direct) 센더 인수인계서](./인수인계서/3.%20MMS-Direct/MMS-Direct%20인수인계서.md) | 차세대 직연동 MMS 센더, MMS-Direct 의 인수인계서     |
+|   1    | [MMS-Core 인수인계서](MMS-Core%20인수인계서.md)                       | 차세대 MMS의 공통 라이브러리인 MMS-Core 의 인수인계서    |
+|   2    | [MMS-Modules 인수인계서](MMS-Core-Modules%20인수인계서.md)    | 차세대 MMS의 공통 라이브러리인 MMS-Modules 의 인수인계서 |
+|   3    | [MCMP 직연동 MMS(Direct) 센더 인수인계서](MMS-Direct%20인수인계서.md) | 차세대 직연동 MMS 센더, MMS-Direct 의 인수인계서     |
 |   4    | [MCMP 엘지유플러스(UPLUS) 센더 인수인계서]()                                                | 차세대 중계사 엘지유플러스 센더의 인수인계서               |
 |   5    | [MCMP 엘지헬로비전(LGHV) 센더 인수인계서]()                                                 | 차세대 중계사 엘지헬로비전 센더의 인수인계서               |
 |   6    | [MCMP 원샷(SMTNT) 센더 인수인계서]()                                                    | 차세대 중계사 원샷(SMTNT) 센더의 인수인계서            |

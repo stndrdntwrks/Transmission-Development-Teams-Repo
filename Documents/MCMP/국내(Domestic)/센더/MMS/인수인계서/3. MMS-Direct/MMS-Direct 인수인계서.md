@@ -24,6 +24,7 @@
 	2. [[#CID 리스트]]
 
 ---
+
 # 들어가기전에
 
 **직연동 MMS 센더**는 MCMP 플랫폼에서 MMS(Multimedia Messaging Service) 메세지를 이동통신사(SKT, KTF, LGT) 로 전송하기 위하여 사용하는 프로세스, *이동통신사 == 직연동*,로 이동통신사로 메세지를 전송하기 때문에 스팸 메세지 관련 이슈에서 중계사에 비해 비교적 자유롭다는 장점을 가지고 있으나 복잡한 패킷 작성 방식과 적은 CID, *이동통신사 LGT 의 경우 2개의 MMS CID*, 로 사용하기 힘들다는 단점을 가지고 있다.
@@ -155,7 +156,7 @@ HttpClient 가 수행하는 *1. 이미지 전송 가능 여부 확인 및 이미
 
 ## HttpClientHandler
 
-`kr.co.seoultel.message.mt.mms.direct.modules.client.http.HttpClientHandler` 클래스를 상속받는 `kr.co.seoultel.message.mt.mms.direct.skt.SktClientHandler`, `kr.co.seoultel.message.mt.mms.direct.ktf.KtfClientHandler`, `kr.co.seoultel.message.mt.mms.direct.lgt.LgtClientHandler` 는 HttpClient 가 메세지 전송 요청을 하기위하여 사용하는 클래스로 이동통신사의 규격에 맞게 각 이통사 메세지 클래스를 생성한 후, 메세지 전송 요청 및 전송 요청 응답 처리를 하는 역할을 수행한다. 
+`kr.co.seoultel.message.mt.mms.direct.modules.client.http.HttpClientHandler` 클래스를 상속받는 `kr.co.seoultel.message.mt.mms.direct.skt.SktClientHandler`, `kr.co.seoultel.message.mt.mms.direct.ktf.KtfClientHandler`, `kr.co.seoultel.message.mt.mms.direct.lgt.LgtClientHandler` 는 HttpClient 가 메세지 전송 요청을 하기위하여 사용하는 클래스로 이동통신사의 규격에 맞게 각 이통사 메세지 클래스를 생성한 후, 메세지 전송 요청 및 전송 요청 응답 처리를 하는 역할을 수행한다. HttpClient 는 고유의 HttpClientHandler 를 가지고 있으며 
 
 **요청 본문에 들어가는 메세지를 생성하는 로직 뿐만 아니라 결과 코드 값은** 다르나 이외의 부분은 동일하기 때문에 난이도가 높지 않다. 메세지 생성 부분과 관련한 자세한 내용은 [[#이동통신사(SKT, KTF, LGT) 별 메세지 생성 방식]] 의 각 이통사의 별첨 문서를 참조하자.
 
@@ -243,7 +244,7 @@ HttpClient 가 수행하는 *1. 이미지 전송 가능 여부 확인 및 이미
 
 # 직연동 MMS 센더 메세지 전송 흐름
 
-[[#3. HttpClientHandler]] 에서 살펴봤듯 기본적인 메세지 전송 흐름은 아래와 같다.
+[[#HttpClientHandler]] 에서 살펴봤듯 기본적인 메세지 전송 흐름은 아래와 같다.
 
 - **공통 메세지 전송 흐름**
 	1. 이통사 별 SoapMessage 생성
@@ -253,9 +254,7 @@ HttpClient 가 수행하는 *1. 이미지 전송 가능 여부 확인 및 이미
 
 이동통신사마다 다른 부분은 SoapMessage 를 생성하는 부분으로 각 이동통신사는 MCMP 에서 SOAP 형식의 메세지의 부모 클래스인 `kr.co.seoultel.message.mt.mms.core.messages.direct.SoapMessage`를 상속받는  `kr.co.seoultel.message.mt.mms.core.messages.direct.skt.SktSoapMessage` 와 `kr.co.seoultel.message.mt.mms.core.messages.direct.ktf.KtfSoapMessage`, `kr.co.seoultel.message.mt.mms.core.messages.direct.lgt.LgtSoapMessage` 가 각 이동통신사 메세지의 부모 클래스이다. 
 
-
-
-각 이동통신사마다 요청 및 응답 방식을 제외한 나머지 부분은 모두 동일하기에 큰 맥락에서 직연동 MMS 센더가 어떠한 흐름으로 메세지 전송을 하는지에 대하여 알아보도록 하자. 이동통신사별로 어떠한 방식으로 요청하는지와 관련한 자세한 내용은 [[#이동통신사(SKT, KTF, LGT) 별 요청 방식 살펴보기]] 에서 살펴보도록 하자.
+각 이동통신사 별 요청 및 응답 방식을 제외한 나머지 부분은 모두 동일하여 큰 맥락에서 직연동 MMS 센더의 Ht 이동통신사별로 어떠한 방식으로 요청하는지와 관련한 자세한 내용은 [[#이동통신사(SKT, KTF, LGT) 별 요청 방식 살펴보기]] 에서 살펴보고 
 
 
 위의 4가지 순서에 맞춰서 하나씩 살펴보도록 하자. 우선 HttpClient 가 MessageConsumer 에게 메세지 전송 책임을 위임받아 전송 가능 여부를 확인한 이후 각 이통사에 맞는 HttpClientHandler 의 `doSubmit(InboundMessage inboundMessage)` 메서드를 호출하게된다.

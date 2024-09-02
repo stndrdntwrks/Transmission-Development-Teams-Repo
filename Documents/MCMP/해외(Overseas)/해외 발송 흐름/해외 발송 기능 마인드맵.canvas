@@ -4,7 +4,7 @@
 		{"id":"2afff2499d37399f","type":"text","text":"## 차세대 에이전트\n### 주요 작업\n\n> 고객사가 DB 에 적재한 데이터를 바탕으로 **API G/W 에게 메세지 전송 요청**을 보낸다.\n\n### 수행 작업\n\n1. ","x":-420,"y":-270,"width":425,"height":520},
 		{"id":"f5e1d265459b9480","type":"text","text":"## Message Server\n\n\n","x":1480,"y":-200,"width":345,"height":380},
 		{"id":"fd349d465a7ec2d3","type":"text","text":"## 데이터 매니저\n\n### 주요 작업\n\n> 주기적 API G/W 가 요청하는 **고객 정보를 전달**한다.\n\n### 수행 작업\n\n1. API G/W 로부터 고객 정보를 전달한다.\n\n\t- **고객 정보의 종류** #확인필요\n\t\t1. 중국 : Signature\n","x":365,"y":-980,"width":675,"height":480},
-		{"id":"f441932db884913d","type":"file","file":"Documents/MCMP/해외(Overseas)/API GW/API GW 연동 규격서.pdf","x":80,"y":520,"width":400,"height":520}
+		{"id":"f441932db884913d","type":"file","file":"Documents/MCMP/국내(Domestic)/API GW/API GW 연동 규격서.pdf","x":80,"y":520,"width":400,"height":520}
 	],
 	"edges":[
 		{"id":"f3717d00b7f5d395","fromNode":"184f890e5efaf166","fromSide":"top","toNode":"fd349d465a7ec2d3","toSide":"bottom"},

@@ -1,6 +1,7 @@
 ---
-담당자: 심정훈
-태그:
+프로세스 명: MMS 센더
+작성자: 심정훈
+tags:
   - MCMP
   - MMS
   - Documents

@@ -1,12 +1,12 @@
 ---
-
 kanban-plugin: board
 담당자: 심정훈
 태그:
   - MCMP
   - MMS
   - Kanban
-
+프로세스 명: MMS 센더
+작성자: 심정훈
 ---
 
 ## ### [공통] MMS 센더

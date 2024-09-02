@@ -1,14 +1,8 @@
 ---
+문서 타입: 업무 기술서
 프로세스 명: MCMP 리포터
----
-|       |                      |        |            |
-| ----- | -------------------- | ------ | ---------- |
-| 프로젝트명 | Report Server        |        |            |
-| 문서명   | Report Server 업무 기술서 | 버전     | V-0.0.1    |
-| 소속    | 전송 개발팀               | 작성일    | 2024-07-08 |
-| 작성자   | 장정호                  | 최종 수정일 | 2024-07-08 |
-| 문서 번호 |                      |        |            |
-
+작성자: 장정호
+작성일: 2024-07-08
 ---
 
 # 목차
@@ -591,7 +585,6 @@ reporter:
 # Reporter의 각 Channel에 할당된 Consumer가 소비할 Queue 이름
   queue:
     sms: mr.sms.report
-    #sms: mr.sms.report.test
     mms: mr.mms.report
     kko: mr.kko.report
     rcs: mr.rcs.report

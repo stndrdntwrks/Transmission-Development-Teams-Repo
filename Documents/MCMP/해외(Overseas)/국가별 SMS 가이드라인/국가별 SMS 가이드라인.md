@@ -1,4 +1,10 @@
-\
+---
+문서 타입: 인수인계서
+프로세스 명: MCMP / 해외
+작성자: 심정훈
+작성일: 2024-08-28
+---
+
 > MCMP 해외발송을 위해 [Twilio](https://www.twilio.com/en-us/guidelines/sms) 에서 제공하는 국가별 SMS 가이드라인을 토대로 국가별 SMS 가이드라인을 통합하여 작성함
 
 
